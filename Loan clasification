@@ -1,0 +1,53 @@
+setwd("S:\\1.activity\\9.decession trees")
+getwd()
+data<-read.csv("data.csv",header = T,sep = ",")
+#droping un necessary coloums
+data<-data[-c(1,5)]
+#converting to factors
+data$Family<-as.factor(data$Family)
+data$Education<-as.factor(data$Education)
+data$Personal.Loan<-as.factor(data$Personal.Loan)
+data$Securities.Account<-as.factor(data$Securities.Account)
+data$CD.Account<-as.factor(data$CD.Account)
+data$Online<-as.factor(data$Online)
+data$CreditCard<-as.factor(data$CreditCard)
+
+#split train and test
+
+rows=seq(1,nrow(data),1)
+set.seed(123)
+trainRows=sample(rows,(70*nrow(data))/100)
+train = data[trainRows,] 
+test = data[-trainRows,]
+#implementing decession tree
+library(rpart)
+dtCart=rpart(Personal.Loan~.,data=train,method="class") 
+plot(dtCart,main="Classification Tree for loan Class",margin=0.15,uniform=TRUE)
+text(dtCart,use.n=T)
+summary(dtCart)
+
+#pruning
+
+dtCart=rpart(Personal.Loan ~.,data=train,method="class", cp=0.001)
+printcp(dtCart)
+dtCart=rpart(Personal.Loan ~.,data=train,method="class", cp=0.0090)
+plot(dtCart,main="Classification Tree for loan Class",margin=0.15,uniform=TRUE)
+text(dtCart,use.n=T)
+summary(dtCart)
+printcp(dtCart)
+
+dtCart2<- prune(dtCart, cp=0.0090634) # from cptable 
+plot(dtCart2,main="Classification Tree for loan Class",margin=0.15,uniform=TRUE)
+text(dtCart2,use.n=T)
+summary(dtCart2) 
+
+#model evoluation
+
+ConfMat=table(train$Personal.Loan, predict(dtCart2, newdata=train, type="class")) 
+ConfMat
+#accuracy
+(ConfMat [2,2])/( ConfMat [2,1]+ ConfMat [2,2])*100
+ConfMat=table(test$Personal.Loan, predict(dtCart, newdata=test, type="class"))
+ConfMat
+#accuracy
+(ConfMat [2,2])/( ConfMat [2,1]+ ConfMat [2,2])*100
